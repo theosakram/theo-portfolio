@@ -52,22 +52,41 @@ const gramedia = [
   },
 ];
 
+const personal = [
+  {
+    name: "Codecheck",
+    url: "https://codecheckai.vercel.app",
+    description:
+      "AI-powered code review tool. Paste your code, get structured feedback on bugs, performance, and readability — streamed token by token. Multi-model via OpenRouter, BYOK.",
+    tags: [
+      "Next.js",
+      "TypeScript",
+      "OpenRouter",
+      "CodeMirror",
+      "Streaming",
+      "Tailwind",
+    ],
+    highlight: true,
+  },
+];
+
 function CompanyGroup({
   company,
   projects,
   isDark,
+  badge = "PUBLIC",
 }: {
   company: string;
   projects: typeof ruangguru;
   isDark: boolean;
+  badge?: string;
 }) {
   return (
     <div>
-      {/* Company label */}
       <div className="flex items-center gap-3 mb-4">
         <span className="text-sm font-medium text-foreground">{company}</span>
         <span className="font-mono text-[10px] tracking-widest text-muted-foreground border border-border rounded-full px-2 py-0.5">
-          PUBLIC
+          {badge}
         </span>
         <div className="flex-1 h-px bg-border" />
       </div>
@@ -163,6 +182,16 @@ export function Work() {
             company="Gramedia"
             projects={gramedia}
             isDark={isDark}
+          />
+        </BlurFade>
+
+        {/* Personal */}
+        <BlurFade inView delay={0.12}>
+          <CompanyGroup
+            company="Personal"
+            projects={personal}
+            isDark={isDark}
+            badge="PUBLIC"
           />
         </BlurFade>
 
