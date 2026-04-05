@@ -3,69 +3,22 @@
 import { cn } from "@/lib/utils";
 import { Moon, Sun } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useCallback, useEffect, useState } from "react";
-import { flushSync } from "react-dom";
+import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
 
 export function ThemeToggle({ className }: { className?: string }) {
-  const [isDark, setIsDark] = useState(false);
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    const update = () =>
-      setIsDark(document.documentElement.classList.contains("dark"));
-    update();
-    const observer = new MutationObserver(update);
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["class"],
-    });
-    return () => observer.disconnect();
-  }, []);
+  // Avoid hydration mismatch — don't render the icon until we know the theme
+  useEffect(() => setMounted(true), []);
 
-  const toggle = useCallback(() => {
-    const prefersReduced = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
-
-    const applyTheme = () => {
-      const next = !isDark;
-      setIsDark(next);
-      document.documentElement.classList.toggle("dark");
-      localStorage.setItem("theme", next ? "dark" : "light");
-    };
-
-    // No view transition for reduced-motion users or unsupported browsers —
-    // just toggle instantly so the button never feels broken
-    if (prefersReduced || typeof document.startViewTransition !== "function") {
-      applyTheme();
-      return;
-    }
-
-    const { innerWidth: w, innerHeight: h } = window;
-    const maxR = Math.hypot(w, h);
-
-    const transition = document.startViewTransition(() => flushSync(applyTheme));
-    transition.ready.then(() => {
-      // Expand from the top of the viewport — feels like a curtain, not a spotlight
-      document.documentElement.animate(
-        {
-          clipPath: [
-            "circle(0px at 50% 0%)",
-            `circle(${maxR}px at 50% 0%)`,
-          ],
-        },
-        {
-          duration: 400,
-          easing: "ease-in-out",
-          pseudoElement: "::view-transition-new(root)",
-        },
-      );
-    });
-  }, [isDark]);
+  const isDark = theme === "dark";
 
   return (
     <button
       type="button"
-      onClick={toggle}
+      onClick={() => setTheme(isDark ? "light" : "dark")}
       aria-label="Toggle theme"
       className={cn(
         "relative w-8 h-8 flex items-center justify-center rounded-md",
@@ -73,32 +26,31 @@ export function ThemeToggle({ className }: { className?: string }) {
         className,
       )}
     >
-      {/* AnimatePresence handles the icon crossfade.
-          Motion's MotionConfig reducedMotion="user" will flatten these
-          to instant swaps for users who've opted out of motion. */}
-      <AnimatePresence mode="wait" initial={false}>
-        {isDark ? (
-          <motion.span
-            key="sun"
-            initial={{ rotate: -45, opacity: 0, scale: 0.8 }}
-            animate={{ rotate: 0, opacity: 1, scale: 1 }}
-            exit={{ rotate: 45, opacity: 0, scale: 0.8 }}
-            transition={{ duration: 0.18, ease: "easeOut" }}
-            className="absolute"
-          >
-            <Sun size={15} strokeWidth={1.5} />
-          </motion.span>
-        ) : (
-          <motion.span
-            key="moon"
-            initial={{ rotate: 45, opacity: 0, scale: 0.8 }}
-            animate={{ rotate: 0, opacity: 1, scale: 1 }}
-            exit={{ rotate: -45, opacity: 0, scale: 0.8 }}
-            transition={{ duration: 0.18, ease: "easeOut" }}
-            className="absolute"
-          >
-            <Moon size={15} strokeWidth={1.5} />
-          </motion.span>
+      <AnimatePresence mode="popLayout" initial={false}>
+        {mounted && (
+          isDark ? (
+            <motion.span
+              key="sun"
+              initial={{ rotate: -45, opacity: 0, scale: 0.7 }}
+              animate={{ rotate: 0, opacity: 1, scale: 1 }}
+              exit={{ rotate: 45, opacity: 0, scale: 0.7 }}
+              transition={{ duration: 0.14, ease: "easeOut" }}
+              className="absolute"
+            >
+              <Sun size={15} strokeWidth={1.5} />
+            </motion.span>
+          ) : (
+            <motion.span
+              key="moon"
+              initial={{ rotate: 45, opacity: 0, scale: 0.7 }}
+              animate={{ rotate: 0, opacity: 1, scale: 1 }}
+              exit={{ rotate: -45, opacity: 0, scale: 0.7 }}
+              transition={{ duration: 0.14, ease: "easeOut" }}
+              className="absolute"
+            >
+              <Moon size={15} strokeWidth={1.5} />
+            </motion.span>
+          )
         )}
       </AnimatePresence>
     </button>
