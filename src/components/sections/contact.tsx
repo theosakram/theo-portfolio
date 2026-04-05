@@ -1,9 +1,10 @@
 "use client";
 
-import { Mail } from "lucide-react";
-import { BlurFade } from "../ui/blur-fade";
-import { BorderBeam } from "../ui/border-beam";
-import { ShimmerButton } from "../ui/shimmer-button";
+import { ArrowUpRight, Mail } from "lucide-react";
+import { motion, useInView } from "motion/react";
+import { useRef } from "react";
+
+const EASE = [0.16, 1, 0.3, 1] as const;
 
 const GithubIcon = () => (
   <svg viewBox="0 0 24 24" fill="currentColor" className="w-4.5 h-4.5">
@@ -51,73 +52,93 @@ const links = [
 ];
 
 export function Contact() {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-80px" });
+
   return (
     <section id="contact" className="px-6 py-24 max-w-3xl mx-auto">
-      <BlurFade inView delay={0}>
-        {/* Big CTA card */}
-        <div className="relative rounded-2xl border border-border bg-card overflow-hidden p-8 sm:p-12 text-center mb-12">
-          <BorderBeam
-            size={200}
-            duration={10}
-            colorFrom="#6366f1"
-            colorTo="#a855f7"
-          />
+      <div ref={ref} className="mb-12 text-center">
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={inView ? { opacity: 1 } : {}}
+          transition={{ duration: 0.4 }}
+          className="text-xs font-mono text-muted-foreground uppercase tracking-widest mb-4"
+        >
+          Contact
+        </motion.p>
 
-          {/* Subtle radial glow */}
-          <div className="absolute inset-0 pointer-events-none [background:radial-gradient(ellipse_at_center,hsl(var(--muted))_0%,transparent_70%)] opacity-50" />
-
-          <div className="relative z-10 space-y-6">
-            <div>
-              <p className="text-xs font-mono text-muted-foreground uppercase tracking-widest mb-4">
-                Contact
-              </p>
-              <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight">
-                Let&apos;s build something great
-              </h2>
-              <p className="text-muted-foreground mt-3 max-w-sm mx-auto">
-                Open to senior frontend roles, contract work, or just a good
-                conversation about tech.
-              </p>
-            </div>
-
-            <ShimmerButton
-              onClick={() => window.open("mailto:wyrdhn@gmail.com")}
-              className="text-sm font-medium mx-auto"
-            >
-              Say hello →
-            </ShimmerButton>
-          </div>
+        {/* Heading — clip-path wipe */}
+        <div className="overflow-hidden">
+          <motion.h2
+            initial={{ clipPath: "inset(0 100% 0 0)" }}
+            animate={inView ? { clipPath: "inset(0 0% 0 0)" } : {}}
+            transition={{ duration: 0.85, delay: 0.1, ease: EASE }}
+            className="text-3xl sm:text-4xl font-semibold tracking-tight"
+          >
+            Let&apos;s build something great
+          </motion.h2>
         </div>
-      </BlurFade>
+
+        <motion.p
+          initial={{ opacity: 0, y: 8 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.5, delay: 0.35, ease: EASE }}
+          className="text-muted-foreground mt-3 max-w-sm mx-auto"
+        >
+          Open to senior frontend roles, contract work, or just a good
+          conversation about tech.
+        </motion.p>
+
+        {/* Email as the primary CTA — large, hover underline + arrow */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.5, delay: 0.5, ease: EASE }}
+          className="mt-8"
+        >
+          <a
+            href="mailto:wyrdhn@gmail.com"
+            className="group inline-flex items-center gap-2 text-xl sm:text-2xl font-medium text-foreground relative"
+          >
+            wyrdhn@gmail.com
+            <ArrowUpRight
+              size={20}
+              className="transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+            />
+            <span className="absolute bottom-0 left-0 h-px w-full bg-foreground origin-left scale-x-0 transition-transform duration-300 ease-out group-hover:scale-x-100" />
+          </a>
+        </motion.div>
+      </div>
 
       {/* Links grid */}
-      <BlurFade inView delay={0.15}>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {links.map((link) => (
-            <a
-              key={link.label}
-              href={link.href}
-              target={link.href.startsWith("mailto") ? undefined : "_blank"}
-              rel="noopener noreferrer"
-              className="group flex flex-col items-center gap-2 rounded-xl border border-border bg-card p-4 hover:bg-muted transition-colors"
-            >
-              <link.icon
-                size={18}
-                strokeWidth={1.5}
-                className="text-muted-foreground group-hover:text-foreground transition-colors"
-              />
-              <div className="text-center">
-                <p className="text-xs font-medium text-foreground">
-                  {link.label}
-                </p>
-                <p className="text-xs text-muted-foreground mt-0.5 font-mono truncate max-w-25">
-                  {link.value}
-                </p>
-              </div>
-            </a>
-          ))}
-        </div>
-      </BlurFade>
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={inView ? { opacity: 1, y: 0 } : {}}
+        transition={{ duration: 0.5, delay: 0.65, ease: EASE }}
+        className="grid grid-cols-2 sm:grid-cols-4 gap-3"
+      >
+        {links.map((link) => (
+          <a
+            key={link.label}
+            href={link.href}
+            target={link.href.startsWith("mailto") ? undefined : "_blank"}
+            rel="noopener noreferrer"
+            className="group flex flex-col items-center gap-2 rounded-xl border border-border bg-card p-4 hover:bg-muted transition-colors"
+          >
+            <link.icon
+              size={18}
+              strokeWidth={1.5}
+              className="text-muted-foreground group-hover:text-foreground transition-colors"
+            />
+            <div className="text-center">
+              <p className="text-xs font-medium text-foreground">{link.label}</p>
+              <p className="text-xs text-muted-foreground mt-0.5 font-mono truncate max-w-25">
+                {link.value}
+              </p>
+            </div>
+          </a>
+        ))}
+      </motion.div>
     </section>
   );
 }

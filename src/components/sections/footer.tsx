@@ -5,7 +5,7 @@ export function Footer() {
         <p>
           Built by{" "}
           <span className="text-foreground font-medium">Theo Sakram</span> with
-          Next.js, Tailwind, shadcn/ui & MagicUI
+          Next.js & Tailwind
         </p>
         <p className="font-mono">&copy; {new Date().getFullYear()}</p>
       </div>
