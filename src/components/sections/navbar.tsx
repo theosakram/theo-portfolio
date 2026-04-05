@@ -3,7 +3,7 @@
 import { cn } from "@/lib/utils";
 import { motion } from "motion/react";
 import { useEffect, useState } from "react";
-import { AnimatedThemeToggler } from "../ui/animated-theme-toggler";
+import { ThemeToggle } from "../ui/theme-toggle";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -57,7 +57,7 @@ export function Navbar() {
               </li>
             ))}
           </ul>
-          <AnimatedThemeToggler />
+          <ThemeToggle />
         </div>
       </nav>
     </motion.header>
