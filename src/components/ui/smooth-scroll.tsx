@@ -1,6 +1,7 @@
 "use client";
 
 import Lenis from "lenis";
+import { MotionConfig } from "motion/react";
 import { useEffect } from "react";
 
 export function SmoothScroll({ children }: { children: React.ReactNode }) {
@@ -20,5 +21,11 @@ export function SmoothScroll({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  return <>{children}</>;
+  // reducedMotion="user" makes every motion.* component in the tree
+  // respect the OS-level prefers-reduced-motion setting automatically
+  return (
+    <MotionConfig reducedMotion="user">
+      {children}
+    </MotionConfig>
+  );
 }
