@@ -4,15 +4,13 @@ import { cn } from "@/lib/utils";
 import { Moon, Sun } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
 
 export function ThemeToggle({ className }: { className?: string }) {
   const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
 
-  // Avoid hydration mismatch — don't render the icon until we know the theme
-  useEffect(() => setMounted(true), []);
-
+  // next-themes returns undefined during SSR — use that to avoid
+  // hydration mismatch without needing a mounted state
+  const mounted = theme !== undefined;
   const isDark = theme === "dark";
 
   return (
