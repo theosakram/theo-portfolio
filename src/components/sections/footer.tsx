@@ -4,8 +4,10 @@ export function Footer() {
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
         <p>
           Built by{" "}
-          <span className="text-foreground font-medium">Theo Sakram</span> with
-          Next.js & Tailwind
+          <span className="text-foreground font-medium">
+            Theophany Sakra Muhammad
+          </span>{" "}
+          with Next.js & Tailwind
         </p>
         <p className="font-mono">&copy; {new Date().getFullYear()}</p>
       </div>
