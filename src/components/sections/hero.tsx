@@ -2,11 +2,12 @@
 
 import { cn } from "@/lib/utils";
 import { ArrowDown } from "lucide-react";
-import { AnimatedShinyText } from "../ui/animated-shiny-text";
-import { BlurFade } from "../ui/blur-fade";
+import { motion, useMotionValue, useSpring, useTransform } from "motion/react";
+import { useEffect, useRef } from "react";
 import { DotPattern } from "../ui/dot-pattern";
-import { ShimmerButton } from "../ui/shimmer-button";
-import { WordRotate } from "../ui/word-rotate";
+
+// Sharp deceleration — feels physical, not floaty
+const EASE = [0.16, 1, 0.3, 1] as const;
 
 const socials = [
   {
@@ -38,117 +39,196 @@ const socials = [
   },
 ];
 
-export function Hero() {
+// Animates each character of a word up from below a clip mask.
+// Container hides overflow so chars aren't visible before they arrive.
+function WordReveal({
+  word,
+  baseDelay,
+  wordIndex,
+}: {
+  word: string;
+  baseDelay: number;
+  wordIndex: number;
+}) {
   return (
-    <section className="relative min-h-screen flex flex-col items-center justify-center px-6 overflow-hidden">
-      {/* Background dot pattern */}
-      <DotPattern
-        width={20}
-        height={20}
-        cx={1}
-        cy={1}
-        cr={1}
-        className={cn(
-          "mask-[radial-gradient(ellipse_at_center,white_20%,transparent_80%)]",
-        )}
-      />
+    <span
+      className="overflow-hidden inline-block"
+      style={{ verticalAlign: "bottom" }}
+    >
+      {word.split("").map((char, i) => (
+        <motion.span
+          key={i}
+          initial={{ y: "105%" }}
+          animate={{ y: 0 }}
+          transition={{
+            duration: 0.75,
+            delay: baseDelay + wordIndex * 0.08 + i * 0.022,
+            ease: EASE,
+          }}
+          className="inline-block"
+        >
+          {char}
+        </motion.span>
+      ))}
+    </span>
+  );
+}
+
+export function Hero() {
+  const sectionRef = useRef<HTMLElement>(null);
+
+  // Cursor parallax for the dot pattern — very subtle, just enough to feel alive
+  const rawX = useMotionValue(0);
+  const rawY = useMotionValue(0);
+  const springX = useSpring(rawX, { stiffness: 60, damping: 20 });
+  const springY = useSpring(rawY, { stiffness: 60, damping: 20 });
+  const dotX = useTransform(springX, (v) => v * 0.018);
+  const dotY = useTransform(springY, (v) => v * 0.018);
+
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+    const onMove = (e: MouseEvent) => {
+      const rect = section.getBoundingClientRect();
+      rawX.set(e.clientX - rect.left - rect.width / 2);
+      rawY.set(e.clientY - rect.top - rect.height / 2);
+    };
+    section.addEventListener("mousemove", onMove);
+    return () => section.removeEventListener("mousemove", onMove);
+  }, [rawX, rawY]);
+
+  const words = "Theophany Sakra Muhammad".split(" ");
+
+  return (
+    <section
+      ref={sectionRef}
+      className="relative min-h-screen flex flex-col items-center justify-center px-6 overflow-hidden"
+    >
+      {/* Background dot pattern — shifts subtly with cursor */}
+      <motion.div
+        className="absolute inset-0 pointer-events-none"
+        style={{ x: dotX, y: dotY }}
+      >
+        <DotPattern
+          width={20}
+          height={20}
+          cx={1}
+          cy={1}
+          cr={1}
+          className={cn(
+            "mask-[radial-gradient(ellipse_at_center,white_20%,transparent_80%)]",
+          )}
+        />
+      </motion.div>
 
       <div className="relative z-10 flex flex-col items-center text-center max-w-2xl mx-auto gap-6">
-        {/* Status badge */}
-        <BlurFade delay={0}>
-          <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-1.5">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-            </span>
-            <AnimatedShinyText className="text-xs font-medium text-foreground/80">
-              Open to new opportunities
-            </AnimatedShinyText>
-          </div>
-        </BlurFade>
+        {/* Status badge — slides in from the left */}
+        <motion.div
+          initial={{ opacity: 0, x: -14 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.05, ease: EASE }}
+          className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-1.5"
+        >
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+          </span>
+          <span className="text-xs font-medium text-foreground/80">
+            Open to new opportunities
+          </span>
+        </motion.div>
 
-        {/* Name */}
-        <BlurFade delay={0.1}>
-          <h1 className="text-5xl sm:text-6xl md:text-7xl font-semibold tracking-tight leading-none">
-            Theophany Sakra Muhammad
-          </h1>
-        </BlurFade>
+        {/* Name — character-by-character reveal, word by word */}
+        <h1 className="text-5xl sm:text-6xl md:text-7xl font-semibold tracking-tight leading-none flex flex-wrap justify-center gap-x-[0.22em]">
+          {words.map((word, wi) => (
+            <WordReveal key={word} word={word} baseDelay={0.18} wordIndex={wi} />
+          ))}
+        </h1>
 
-        {/* Title with word rotate */}
-        <BlurFade delay={0.2}>
-          <div className="flex flex-wrap items-center justify-center gap-x-2 text-xl sm:text-2xl text-muted-foreground font-light">
-            <span>Senior FE who builds</span>
-            <WordRotate
-              words={[
-                "edtech platforms.",
-                "e-commerce at scale.",
-                "dashboard systems.",
-                "warehouse ops UIs.",
-                "AI-powered products.",
-              ]}
-              className="text-foreground font-medium"
-            />
-          </div>
-        </BlurFade>
+        {/* Role line — clip-path wipe left to right */}
+        <div className="overflow-hidden">
+          <motion.div
+            initial={{ clipPath: "inset(0 100% 0 0)" }}
+            animate={{ clipPath: "inset(0 0% 0 0)" }}
+            transition={{ duration: 0.9, delay: 0.68, ease: EASE }}
+            className="text-xl sm:text-2xl text-muted-foreground font-light"
+          >
+            Senior FE who builds things people actually use.
+          </motion.div>
+        </div>
 
-        {/* Bio */}
-        <BlurFade delay={0.3}>
-          <p className="text-muted-foreground text-base max-w-md leading-relaxed">
-            5+ years across{" "}
-            <span className="text-foreground font-medium">CROWDE</span>,{" "}
-            <span className="text-foreground font-medium">Ruangguru</span>,{" "}
-            <span className="text-foreground font-medium">Harmonix</span>, and
-            now <span className="text-foreground font-medium">Gramedia</span> —
-            building everything from edtech platforms to e-commerce and
-            warehouse ops systems.
-          </p>
-        </BlurFade>
+        {/* Bio — intentional plain fade-up, not BlurFade */}
+        <motion.p
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.88, ease: EASE }}
+          className="text-muted-foreground text-base max-w-md leading-relaxed"
+        >
+          5+ years across{" "}
+          <span className="text-foreground font-medium">CROWDE</span>,{" "}
+          <span className="text-foreground font-medium">Ruangguru</span>,{" "}
+          <span className="text-foreground font-medium">Harmonix</span>, and now{" "}
+          <span className="text-foreground font-medium">Gramedia</span> —
+          building everything from edtech platforms to e-commerce and warehouse
+          ops systems.
+        </motion.p>
 
         {/* CTAs */}
-        <BlurFade delay={0.4}>
-          <div className="flex items-center gap-3 flex-wrap justify-center">
-            <ShimmerButton
-              onClick={() =>
-                document
-                  .getElementById("work")
-                  ?.scrollIntoView({ behavior: "smooth" })
-              }
-              className="text-sm font-medium px-6 py-2.5"
-            >
-              View my work
-            </ShimmerButton>
-            <a
-              href="mailto:wyrdhn@gmail.com"
-              className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-6 py-2.5 text-sm font-medium text-foreground hover:bg-muted transition-colors"
-            >
-              Get in touch
-            </a>
-          </div>
-        </BlurFade>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 1.05, ease: EASE }}
+          className="flex items-center gap-3 flex-wrap justify-center"
+        >
+          <button
+            onClick={() =>
+              document
+                .getElementById("work")
+                ?.scrollIntoView({ behavior: "smooth" })
+            }
+            className="group relative inline-flex items-center overflow-hidden rounded-full bg-foreground px-6 py-2.5 text-sm font-medium text-background transition-opacity hover:opacity-90"
+          >
+            View my work
+          </button>
+          <a
+            href="mailto:wyrdhn@gmail.com"
+            className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-6 py-2.5 text-sm font-medium text-foreground hover:bg-muted transition-colors"
+          >
+            Get in touch
+          </a>
+        </motion.div>
 
         {/* Socials */}
-        <BlurFade delay={0.5}>
-          <div className="flex items-center gap-4">
-            {socials.map((s) => (
-              <a
-                key={s.label}
-                href={s.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={s.label}
-                className="text-muted-foreground hover:text-foreground transition-colors"
-              >
-                {s.svg}
-              </a>
-            ))}
-          </div>
-        </BlurFade>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 1.2 }}
+          className="flex items-center gap-4"
+        >
+          {socials.map((s) => (
+            <a
+              key={s.label}
+              href={s.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={s.label}
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {s.svg}
+            </a>
+          ))}
+        </motion.div>
       </div>
 
       {/* Scroll indicator */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 text-muted-foreground animate-bounce">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5, delay: 1.5 }}
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 text-muted-foreground animate-bounce"
+      >
         <ArrowDown size={16} strokeWidth={1.5} />
-      </div>
+      </motion.div>
     </section>
   );
 }

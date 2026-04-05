@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Roboto, IBM_Plex_Sans } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/theme-provider";
+import { SmoothScroll } from "@/components/ui/smooth-scroll";
 
 const ibmPlexSansHeading = IBM_Plex_Sans({
   subsets: ["latin"],
@@ -61,7 +62,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <SmoothScroll>{children}</SmoothScroll>
         </ThemeProvider>
       </body>
     </html>
