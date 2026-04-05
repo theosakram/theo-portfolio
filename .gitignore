@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# package-lock (project uses bun)
+package-lock.json
+
+# claude code
+.claude/
